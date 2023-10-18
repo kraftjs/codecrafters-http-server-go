@@ -8,15 +8,16 @@ import (
 )
 
 const (
-	okayResponse     = ""
-	notFoundResponse = ""
+	okayResponse     = "HTTP/1.1 200 OK\r\n\r\n"
+	notFoundResponse = "HTTP/1.1 404 Not Found\r\n\r\n"
 )
 
 func handleConnection(conn net.Conn) {
-	var buffer []byte
-	conn.Read(buffer)
-	response := parseRequest(string(buffer))
+	buf := make([]byte, 1024)
+	conn.Read(buf)
+	response := parseRequest(string(buf))
 	conn.Write([]byte(response))
+	conn.Close()
 }
 
 func parseRequest(request string) string {
@@ -46,6 +47,4 @@ func main() {
 	}
 
 	handleConnection(connection)
-
-	connection.Close()
 }
