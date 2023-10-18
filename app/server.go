@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+func handleConnection(conn net.Conn) {
+	const response = "HTTP/1.1 200 OK\r\n\r\n"
+	conn.Write([]byte(response))
+}
+
 func main() {
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
@@ -13,9 +18,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	_, err = l.Accept()
+	connection, err := l.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
+
+	handleConnection(connection)
+	connection.Close()
 }
