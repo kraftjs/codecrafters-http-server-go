@@ -4,11 +4,32 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
+)
+
+const (
+	okayResponse     = ""
+	notFoundResponse = ""
 )
 
 func handleConnection(conn net.Conn) {
-	const response = "HTTP/1.1 200 OK\r\n\r\n"
+	var buffer []byte
+	conn.Read(buffer)
+	response := parseRequest(string(buffer))
 	conn.Write([]byte(response))
+}
+
+func parseRequest(request string) string {
+	fmt.Println("Request:\n", request)
+	startLine := strings.Split(request, "\r\n")[0]
+	path := strings.Split(startLine, " ")[1]
+
+	switch path {
+	case "/":
+		return okayResponse
+	default:
+		return notFoundResponse
+	}
 }
 
 func main() {
@@ -25,5 +46,6 @@ func main() {
 	}
 
 	handleConnection(connection)
+
 	connection.Close()
 }
