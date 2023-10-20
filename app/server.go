@@ -13,24 +13,32 @@ const (
 )
 
 func handleConnection(conn net.Conn) {
-	buf := make([]byte, 1024)
-	conn.Read(buf)
-	response := parseRequest(string(buf))
-	conn.Write([]byte(response))
+	request := readRequest(conn)
+	sendResponse(conn, request)
 	conn.Close()
 }
 
-func parseRequest(request string) string {
-	fmt.Println("Request:\n", request)
-	startLine := strings.Split(request, "\r\n")[0]
-	path := strings.Split(startLine, " ")[1]
-
-	switch path {
-	case "/":
-		return okayResponse
-	default:
-		return notFoundResponse
+func readRequest(conn net.Conn) Request {
+	buf := make([]byte, 1024)
+	_, err := conn.Read(buf)
+	if err != nil {
+		fmt.Println("Error reading from connection: ", err.Error())
 	}
+	return NewRequest(buf)
+}
+
+func sendResponse(conn net.Conn, request Request) {
+	var response string
+	switch {
+	case request.path == "/":
+		response = okayResponse
+	case strings.HasPrefix(request.path, "/echo/"):
+		response = CreateEchoResponse(request.path[len("/echo/"):])
+	default:
+		response = notFoundResponse
+	}
+	fmt.Println("Response: ", response)
+	conn.Write([]byte(response))
 }
 
 func main() {
